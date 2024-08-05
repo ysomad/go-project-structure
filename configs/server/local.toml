@@ -1,0 +1,7 @@
+port = 8080
+
+[logging]
+level = "debug"
+
+[metadata]
+service_name = "dropp-server"

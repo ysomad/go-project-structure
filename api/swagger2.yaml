@@ -1,0 +1,364 @@
+---
+swagger: '2.0'
+info:
+  version: 1.0.0
+  title: Server
+tags:
+  - name: product
+    description: Товары
+  - name: logging
+    description: Логирование
+  - name: health
+securityDefinitions:
+  apiKey:
+    type: apiKey
+    in: header
+    name: X-API-Key
+paths:
+  /v1/products:
+    get:
+      tags: [product]
+      summary: Список товаров
+      operationId: list_products_v1
+      consumes: [application/json]
+      produces: [application/json]
+      parameters:
+        - name: gender
+          required: true
+          in: query
+          type: string
+          enum: [men, women]
+        - name: categories
+          in: query
+          type: array
+          items:
+            type: string
+        - name: brands
+          in: query
+          type: array
+          items:
+            type: string
+        - name: colors
+          in: query
+          type: array
+          items:
+            type: string
+        - name: sizes
+          in: query
+          type: array
+          items:
+            type: string
+        - name: labelsin
+          in: query
+          type: array
+          items:
+            type: string
+        - name: min_price
+          in: query
+          type: integer
+          format: int32
+        - name: max_price
+          in: query
+          type: integer
+          format: int32
+        - name: sort
+          in: query
+          type: string
+          enum: [price_asc, price_desc]
+        - name: page_size
+          in: query
+          type: integer
+          format: int32
+          default: 60
+          maximum: 100
+        - name: page_token
+          in: query
+          type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/ListProductsResponse'
+        '400':
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/Error'
+  /v1/products/{product_id}:
+    get:
+      tags: [product]
+      summary: Карточка товара
+      operationId: get_product
+      consumes: [application/json]
+      produces: [application/json]
+      parameters:
+        - name: product_id
+          in: path
+          required: true
+          type: string
+        - name: gender
+          required: true
+          in: query
+          type: string
+          enum: [men, women]
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/ProductCard'
+        '400':
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/Error'
+  /ping:
+    get:
+      tags: [health]
+      operationId: ping
+      summary: Пинг
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/PingResponse'
+  /log-level:
+    get:
+      tags: [logging]
+      operationId: getLogLevel
+      summary: Текущий уровень логирования
+      produces: [application/json]
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/LogLevel'
+    put:
+      tags: [logging]
+      operationId: updateLogLevel
+      summary: Обновить уровень логирования
+      consumes: [application/json]
+      security:
+        - apiKey: []
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/LogLevel'
+      responses:
+        '204':
+          description: No Content
+definitions:
+  Error:
+    type: object
+    properties:
+      code:
+        type: integer
+        format: int32
+      message:
+        type: string
+  Price:
+    type: object
+    properties:
+      current:
+        type: integer
+        format: int32
+      old:
+        type: integer
+        format: int32
+      currency_code:
+        type: string
+      discount_percentage:
+        type: number
+        format: double
+  Product:
+    type: object
+    properties:
+      id:
+        type: string
+      title:
+        type: string
+      label:
+        type: string
+      brand:
+        type: string
+      price:
+        $ref: '#/definitions/Price'
+      sizes:
+        type: array
+        items:
+          type: string
+      images:
+        type: array
+        items:
+          type: string
+          format: uri
+      merchant_count:
+        type: integer
+        format: int32
+      merchant_icons:
+        type: array
+        items:
+          type: string
+          format: uri
+  Brand:
+    type: object
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+  Color:
+    type: object
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      hex:
+        type: string
+  PriceWithShipment:
+    type: object
+    properties:
+      current:
+        type: integer
+        format: int32
+      old:
+        type: integer
+        format: int32
+      currency_code:
+        type: string
+      discount_percentage:
+        type: number
+        format: double
+      shipment:
+        type: integer
+        format: int32
+  DeliveryPeriod:
+    type: object
+    properties:
+      start_day:
+        type: integer
+        format: int32
+      end_day:
+        type: integer
+        format: int32
+  OfferMerchant:
+    type: object
+    properties:
+      name:
+        type: string
+      service_name:
+        type: string
+      official:
+        type: boolean
+      logo_url:
+        type: string
+        format: uri
+      logo_text:
+        type: string
+      icon_url:
+        type: string
+        format: uri
+  ProductVariantOffer:
+    type: object
+    properties:
+      variant_id:
+        type: string
+      in_stock:
+        type: boolean
+      last_left:
+        type: boolean
+      price:
+        $ref: '#/definitions/PriceWithShipment'
+      merchant:
+        $ref: '#/definitions/OfferMerchant'
+      delivery:
+        $ref: '#/definitions/DeliveryPeriod'
+      return_policy:
+        type: boolean
+  ProductVariant:
+    type: object
+    properties:
+      size:
+        type: string
+      is_default:
+        type: boolean
+      min_price:
+        $ref: '#/definitions/PriceWithShipment'
+      scale_abbreviation:
+        type: string
+      scale_description:
+        type: string
+      offers:
+        type: array
+        items:
+          $ref: '#/definitions/ProductVariantOffer'
+  Category:
+    type: object
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+  ProductCard:
+    type: object
+    properties:
+      id:
+        type: string
+      title:
+        type: string
+      label:
+        type: string
+      description:
+        type: string
+      categories:
+        type: array
+        items:
+          $ref: '#/definitions/Category'
+      brand:
+        $ref: '#/definitions/Brand'
+      price:
+        $ref: '#/definitions/PriceWithShipment'
+      color:
+        $ref: '#/definitions/Color'
+      variants:
+        type: array
+        items:
+          $ref: '#/definitions/ProductVariant'
+      images:
+        type: array
+        items:
+          type: string
+          format: uri
+      merchant_count:
+        type: integer
+        format: int32
+      merchant_icons:
+        type: array
+        items:
+          type: string
+          format: uri
+  ListProductsResponse:
+    type: object
+    properties:
+      products:
+        type: array
+        items:
+          $ref: '#/definitions/Product'
+      total_pages:
+        type: number
+        format: int32
+      next_page_token:
+        type: string
+  PingResponse:
+    type: object
+    properties:
+      status:
+        type: string
+  LogLevel:
+    type: object
+    properties:
+      level:
+        type: string
+        enum: [DEBUG, INFO, WARN, ERROR]
+  ApiKey:
+    type: string

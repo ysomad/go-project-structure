@@ -1,0 +1,95 @@
+---
+run:
+  timeout: 5m
+linters:
+  enable:
+    - errcheck
+    - gofumpt
+    - goimports
+    - staticcheck
+    - govet
+    - nakedret
+    - ireturn
+    - paralleltest
+    - gosimple
+    - ineffassign
+    - unused
+    - bodyclose
+    - canonicalheader
+    - containedctx
+    - contextcheck
+    - copyloopvar
+    - cyclop
+    - dogsled
+    - dupl
+    - dupword
+    - durationcheck
+    - err113
+    - errchkjson
+    - errname
+    - errorlint
+    - exhaustive
+    - fatcontext
+    - forcetypeassert
+    - gocheckcompilerdirectives
+    - gochecknoglobals
+    - gochecknoinits
+    - goconst
+    - gocritic
+    - godot
+    - godox
+    - goprintffuncname
+    - gosec
+    - gosmopolitan
+    - grouper
+    - importas
+    - interfacebloat
+    - intrange
+    - makezero
+    - mirror
+    - misspell
+    - musttag
+    - nestif
+    - nilerr
+    - nilnil
+    - noctx
+    - nolintlint
+    - nonamedreturns
+    - nosprintfhostport
+    - perfsprint
+    - prealloc
+    - predeclared
+    - promlinter
+    - reassign
+    - rowserrcheck
+    - sloglint
+    - spancheck
+    - sqlclosecheck
+    - tagliatelle
+    - tenv
+    - testifylint
+    - unconvert
+    - unparam
+    - usestdlibvars
+    - wastedassign
+    - whitespace
+    - wrapcheck
+linters-settings:
+  errcheck:
+    check-type-assertions: true
+    check-blank: true
+  nakedret:
+    # No naked returns, ever.
+    max-func-lines: 1
+  ireturn:
+    allow:
+      - stdlib
+      - error
+      - .Responder  # allow to return go-swagger generated responders
+  paralleltest:
+    ignore-missing-subtests: true
+  nolintlint:
+    require-explanation: true
+    require-specific: true
+issues:
+  exclude-dirs: [internal/gen]
