@@ -2,12 +2,18 @@ include .env
 export
 
 export GOOSE_DRIVER=postgres
-export GOOSE_DBSTRING=${PG_URL}
+export GOOSE_DBSTRING=${POSTGRES_URL}
 
 .PHONY: run-server
 run-server:
 	go mod tidy && go mod download && \
 	pplog go run ./cmd/server/main.go
+
+.PHONY: run-server-migrate
+run-server-migrate:
+	go mod tidy && go mod download && \
+	pplog go run ./cmd/server/main.go -migrate
+
 
 .PHONY: gen-server
 gen-server:

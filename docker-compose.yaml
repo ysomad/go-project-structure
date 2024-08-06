@@ -1,11 +1,21 @@
 ---
 services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: pass
+      POSTGRES_DB: postgres
+    ports: [5432:5432]
+    volumes: [pg-data:/var/lib/postgresql/data]
   jaeger:
     image: jaegertracing/all-in-one:latest
     restart: always
     ports: [16686:16686, '14268', '14250']
   otel-collector:
-    image: otel/opentelemetry-collector:0.106.1
+    image: otel/opentelemetry-collector:latest
     restart: always
     command: [--config=/etc/otel-collector-config.yaml, '${OTELCOL_ARGS}']
     volumes: [./configs/otel-collector.yaml:/etc/otel-collector-config.yaml]
@@ -23,3 +33,6 @@ services:
     restart: always
     volumes: [./configs/prometheus.yaml:/etc/prometheus/prometheus.yml]
     ports: [9090:9090]
+volumes:
+  pg-data:
+  grafana-data:

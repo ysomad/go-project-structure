@@ -19,12 +19,17 @@ import (
 	"github.com/ysomad/go-project-structure/internal/gen/server/restapi/operations/product"
 	"github.com/ysomad/go-project-structure/internal/handler/http"
 	v1 "github.com/ysomad/go-project-structure/internal/handler/http/v1"
+	"github.com/ysomad/go-project-structure/internal/service"
 	"github.com/ysomad/go-project-structure/internal/slogx"
+	"github.com/ysomad/go-project-structure/internal/storage/postgres"
+	"github.com/ysomad/go-project-structure/internal/storage/postgres/pgclient"
 )
 
-func Run(conf config.Server) error {
+func Run(conf config.Server, migrate bool) error {
+	ctx := context.TODO()
+
 	// opentelemetry
-	otelShutdown, err := setupOTelSDK(context.TODO(), conf.Metadata)
+	otelShutdown, err := setupOTelSDK(ctx, conf.Metadata)
 	if err != nil {
 		return err
 	}
@@ -41,9 +46,19 @@ func Run(conf config.Server) error {
 
 	slog.Debug("starting with config", "config", conf)
 
-	// global providers
-	tracer := otel.GetTracerProvider().Tracer("")
-	meter := otel.GetMeterProvider().Meter("")
+	// migrations
+	if migrate {
+		err := runMigrations(ctx)
+		if err != nil {
+			return fmt.Errorf("goose: %w", err)
+		}
+	}
+
+	// db
+	pgcli, err := pgclient.New(ctx, conf.Postgres.URL)
+	if err != nil {
+		return fmt.Errorf("pgclient: %w", err)
+	}
 
 	// api
 	swaggerSpec, err := loads.Embedded(restapi.SwaggerJSON, restapi.FlatSwaggerJSON)
@@ -52,21 +67,28 @@ func Run(conf config.Server) error {
 	}
 
 	api := operations.NewServerAPI(swaggerSpec)
-	api.UseSwaggerUI()
+	api.UseRedoc()
 
 	api.APIKeyAuth = func(key string) (any, error) {
-		if key == conf.Log.APIKey {
-			return model.APIKey(key), nil
+		if key != conf.Log.APIKey {
+			return nil, errors.New(401, "unauthenticated for invalid credentials")
 		}
-		return nil, errors.New(401, "unauthenticated for invalid credentials")
+		return model.APIKey(key), nil
 	}
+
+	// domain
+	productDB := postgres.NewProductStorage(pgcli)
+	productSvc := service.NewProduct(productDB)
 
 	// handler implementations
 	api.HealthPingHandler = health.PingHandlerFunc(http.Ping)
 	api.LoggingGetLogLevelHandler = logging.GetLogLevelHandlerFunc(http.GetLogLevel)
 	api.LoggingUpdateLogLevelHandler = logging.UpdateLogLevelHandlerFunc(http.UpdateLogLevel)
 
-	productHandlers := v1.NewProductHandlers(tracer, meter)
+	tracer := otel.GetTracerProvider().Tracer("")
+	meter := otel.GetMeterProvider().Meter("")
+
+	productHandlers := v1.NewProductHandlers(tracer, meter, productSvc)
 	api.ProductListProductsV1Handler = product.ListProductsV1HandlerFunc(productHandlers.List)
 
 	server := restapi.NewServer(api)
@@ -76,7 +98,6 @@ func Run(conf config.Server) error {
 
 	// provide opentelemetry tracing middleware to create spans on incoming requests
 	handler := api.Serve(withTracing)
-
 	server.SetHandler(handler)
 
 	if err := server.Serve(); err != nil {

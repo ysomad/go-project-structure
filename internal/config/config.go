@@ -1,9 +1,10 @@
 package config
 
 type Server struct {
-	Metadata Metadata `toml:"metadata"`
-	Log      Log      `toml:"logging"`
 	Port     int      `toml:"port" env-required:"true"`
+	Log      Log      `toml:"logging"`
+	Metadata Metadata `toml:"metadata"`
+	Postgres Postgres `toml:"postgres"`
 }
 
 type Log struct {
@@ -16,4 +17,8 @@ type Metadata struct {
 	InstanceID  string
 	Version     string
 	BuildTime   int64
+}
+
+type Postgres struct {
+	URL string `env:"POSTGRES_URL" env-required:"true"`
 }

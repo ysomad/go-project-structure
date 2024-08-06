@@ -13,6 +13,7 @@ import (
 
 	"github.com/ysomad/go-project-structure/internal/gen/server/model"
 	"github.com/ysomad/go-project-structure/internal/gen/server/restapi/operations/product"
+	"github.com/ysomad/go-project-structure/internal/service"
 )
 
 type productHandlers struct {
@@ -21,7 +22,7 @@ type productHandlers struct {
 
 var apiCounter metric.Int64Counter
 
-func NewProductHandlers(t trace.Tracer, m metric.Meter) *productHandlers {
+func NewProductHandlers(t trace.Tracer, m metric.Meter, s *service.Product) *productHandlers {
 	var err error
 
 	apiCounter, err = m.Int64Counter(
