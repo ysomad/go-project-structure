@@ -8,7 +8,6 @@ import (
 
 	"github.com/ysomad/go-project-structure/internal/app/server"
 	"github.com/ysomad/go-project-structure/internal/config"
-	"github.com/ysomad/go-project-structure/internal/slogx"
 )
 
 func main() {
@@ -26,10 +25,10 @@ func main() {
 	flag.Parse()
 
 	if err := cleanenv.ReadConfig(confpath, &conf); err != nil {
-		slogx.Fatal("read config: " + err.Error())
+		panic(err)
 	}
 
 	if err := server.Run(conf, migrate); err != nil {
-		slogx.Fatal(err.Error())
+		panic(err)
 	}
 }

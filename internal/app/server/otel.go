@@ -36,7 +36,7 @@ func setupOTelSDK(ctx context.Context, meta config.Metadata) (func(context.Conte
 	// The errors from the calls are joined.
 	// Each registered cleanup will be invoked once.
 	shutdown := func(ctx context.Context) error {
-		slog.InfoContext(ctx, "otel cleanup")
+		slog.DebugContext(ctx, "otel cleanup")
 		var err error
 		for _, fn := range shutdownFuncs {
 			err = errors.Join(err, fn(ctx))

@@ -97,19 +97,15 @@ func Run(conf config.Server, migrate bool) error {
 	productHandlers := v1.NewProductHandlers(tracer, meter, productSvc)
 	api.ProductListProductsV1Handler = product.ListProductsV1HandlerFunc(productHandlers.List)
 
-	server := restapi.NewServer(api)
-	defer server.Shutdown() //nolint:errcheck // never fails
-
 	// provide opentelemetry tracing middleware to create spans on incoming requests
 	handler := api.Serve(withTracing)
-	server.SetHandler(handler)
 
 	// http
 	srv := httpserver.New(ctx, handler, httpserver.WithPort(conf.Port))
 
 	select {
 	case err := <-srv.Notify():
-		slogx.FatalContext(ctx, "httpserver: "+err.Error())
+		slog.ErrorContext(ctx, "httpserver: "+err.Error())
 	case <-ctx.Done():
 		slog.InfoContext(ctx, ctx.Err().Error())
 	}
