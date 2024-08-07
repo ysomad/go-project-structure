@@ -44,7 +44,6 @@ func NewProductHandlers(t trace.Tracer, m metric.Meter, s *service.Product) *pro
 func (h *productHandlers) List(p product.ListProductsV1Params) product.ListProductsV1Responder {
 	ctx := p.HTTPRequest.Context()
 
-	slogx.Fatal("list products", "gender", p.Gender)
 	slogx.TraceContext(ctx, "list products", "gender", p.Gender)
 
 	apiCounter.Add(ctx, 1)

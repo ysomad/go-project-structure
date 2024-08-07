@@ -47,8 +47,8 @@ func Run(conf config.Server, migrate bool) error {
 	slogx.LevelVar.Set(slogx.ParseLevel(conf.Log.Level))
 
 	otelHandler := otelslog.NewHandler("")
-	levelHandler := slogx.NewLevelFilter(otelHandler)
-	slog.SetDefault(slog.New(levelHandler))
+	logHandler := slogx.NewLevelFilter(otelHandler)
+	slog.SetDefault(slog.New(logHandler))
 
 	slog.Debug("starting with config", "config", conf)
 
