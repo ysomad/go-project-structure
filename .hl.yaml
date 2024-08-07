@@ -45,7 +45,15 @@ fields:
   # List of wildcard field names to ignore.
   ignore: [_*]
   # List of exact field names to hide.
-  hide: []
+  hide:
+    - ObservedTimestamp
+    - Body
+    - Scope
+    - DroppedAttributes
+    - SeverityText
+    - Attributes
+    - Resource
+    - TraceFlags
 # Formatting settings.
 formatting:
   flatten: always
