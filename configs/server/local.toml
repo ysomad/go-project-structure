@@ -4,4 +4,4 @@ port = "8080"
 level = "debug"
 
 [metadata]
-service_name = "dropp-server"
+service_name = "server"
