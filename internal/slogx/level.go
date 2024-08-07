@@ -13,7 +13,7 @@ func init() { //nolint:gochecknoinits // to init default log level
 var (
 	// LevelVar is global logging level which allows to change it in runtime.
 	LevelVar customLevelVar = customLevelVar{&slog.LevelVar{}} //nolint:gochecknoglobals // for updating log level in runtime
-	_        slog.Handler   = &levelFilter{}
+	_        slog.Handler   = &LevelFilter{}
 )
 
 // customLevelVar is a wrapper for slog.customLevelVar.String method to return custom log level strings.
@@ -69,20 +69,16 @@ func ParseLevel(level string) slog.Level {
 	}
 }
 
-// levelFilter is a slog handler middleware which is filtering by slog.Level.
+// LevelFilter is a slog handler middleware which is filtering by slog.Level.
 // It's required because otelslog.Handler does not filtering by level unlike slog.defaultHandler.
-type levelFilter struct {
-	next slog.Handler
+type LevelFilter struct {
+	slog.Handler
 }
 
-func NewLevelFilter(next slog.Handler) *levelFilter {
-	return &levelFilter{next: next}
+func NewLevelFilter(next slog.Handler) LevelFilter {
+	return LevelFilter{next}
 }
 
-func (*levelFilter) Enabled(ctx context.Context, l slog.Level) bool {
+func (LevelFilter) Enabled(ctx context.Context, l slog.Level) bool {
 	return l >= LevelVar.Level()
 }
-
-func (h *levelFilter) Handle(ctx context.Context, r slog.Record) error { return h.next.Handle(ctx, r) }
-func (h *levelFilter) WithAttrs(attrs []slog.Attr) slog.Handler        { return h.next.WithAttrs(attrs) }
-func (h *levelFilter) WithGroup(name string) slog.Handler              { return h.next.WithGroup(name) }

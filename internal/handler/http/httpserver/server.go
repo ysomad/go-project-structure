@@ -2,6 +2,7 @@ package httpserver
 
 import (
 	"context"
+	"log/slog"
 	"net"
 	"net/http"
 	"time"
@@ -39,12 +40,13 @@ func New(ctx context.Context, h http.Handler, opts ...Option) *server {
 		opt(s)
 	}
 
-	s.start()
+	s.start(ctx)
 	return s
 }
 
-func (s *server) start() {
+func (s *server) start(ctx context.Context) {
 	go func() {
+		slog.InfoContext(ctx, "starting http server at "+s.server.Addr)
 		s.notify <- s.server.ListenAndServe()
 		close(s.notify)
 	}()
@@ -54,8 +56,10 @@ func (s *server) Notify() <-chan error {
 	return s.notify
 }
 
-func (s *server) Shutdown() error {
-	ctx, cancel := context.WithTimeout(context.Background(), s.shutdownTimeout)
+func (s *server) Shutdown(ctx context.Context) error {
+	slog.InfoContext(ctx, "shutting down http server at "+s.server.Addr)
+
+	ctx, cancel := context.WithTimeout(ctx, s.shutdownTimeout)
 	defer cancel()
 
 	return s.server.Shutdown(ctx) //nolint:wrapcheck // not needed here

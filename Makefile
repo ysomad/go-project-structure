@@ -7,12 +7,12 @@ export GOOSE_DBSTRING=${POSTGRES_URL}
 .PHONY: run-server
 run-server:
 	go mod tidy && go mod download && \
-	pplog go run ./cmd/server/main.go
+	go run ./cmd/server/main.go | hl -P
 
 .PHONY: run-server-migrate
 run-server-migrate:
 	go mod tidy && go mod download && \
-	go run ./cmd/server/main.go -migrate
+	go run ./cmd/server/main.go -migrate | hl -P
 
 
 .PHONY: gen-server

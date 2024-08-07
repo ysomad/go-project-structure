@@ -3,7 +3,6 @@ package slogx
 import (
 	"context"
 	"log/slog"
-	"os"
 )
 
 func TraceContext(ctx context.Context, msg string, args ...any) {
@@ -16,10 +15,8 @@ func Trace(msg string, args ...any) {
 
 func FatalContext(ctx context.Context, msg string, args ...any) {
 	slog.Log(ctx, LevelFatal.Level(), msg, args...)
-	os.Exit(1)
 }
 
 func Fatal(msg string, args ...any) {
 	slog.Log(context.Background(), LevelFatal.Level(), msg, args...)
-	os.Exit(1)
 }

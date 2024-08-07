@@ -29,8 +29,8 @@ import (
 )
 
 func Run(conf config.Server, migrate bool) error {
-	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
-	defer stop()
+	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
+	defer cancel()
 
 	// opentelemetry
 	otelShutdown, err := setupOTelSDK(ctx, conf.Metadata)
@@ -109,13 +109,12 @@ func Run(conf config.Server, migrate bool) error {
 
 	select {
 	case err := <-srv.Notify():
-		return fmt.Errorf("httpserver: %w", err)
+		slogx.FatalContext(ctx, "httpserver: "+err.Error())
 	case <-ctx.Done():
-		slog.InfoContext(ctx, "interrupt context")
-		stop()
+		slog.InfoContext(ctx, ctx.Err().Error())
 	}
 
-	if err := srv.Shutdown(); err != nil {
+	if err := srv.Shutdown(ctx); err != nil {
 		return fmt.Errorf("shutdown: %w", err)
 	}
 
