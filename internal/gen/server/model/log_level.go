@@ -21,7 +21,7 @@ import (
 type LogLevel struct {
 
 	// level
-	// Enum: ["DEBUG","INFO","WARN","ERROR"]
+	// Enum: ["TRACE","DEBUG","INFO","WARN","ERROR","FATAL"]
 	Level string `json:"level,omitempty"`
 }
 
@@ -43,7 +43,7 @@ var logLevelTypeLevelPropEnum []interface{}
 
 func init() {
 	var res []string
-	if err := json.Unmarshal([]byte(`["DEBUG","INFO","WARN","ERROR"]`), &res); err != nil {
+	if err := json.Unmarshal([]byte(`["TRACE","DEBUG","INFO","WARN","ERROR","FATAL"]`), &res); err != nil {
 		panic(err)
 	}
 	for _, v := range res {
@@ -52,6 +52,9 @@ func init() {
 }
 
 const (
+
+	// LogLevelLevelTRACE captures enum value "TRACE"
+	LogLevelLevelTRACE string = "TRACE"
 
 	// LogLevelLevelDEBUG captures enum value "DEBUG"
 	LogLevelLevelDEBUG string = "DEBUG"
@@ -64,6 +67,9 @@ const (
 
 	// LogLevelLevelERROR captures enum value "ERROR"
 	LogLevelLevelERROR string = "ERROR"
+
+	// LogLevelLevelFATAL captures enum value "FATAL"
+	LogLevelLevelFATAL string = "FATAL"
 )
 
 // prop value enum

@@ -26,7 +26,7 @@ func main() {
 	flag.Parse()
 
 	if err := cleanenv.ReadConfig(confpath, &conf); err != nil {
-		slogx.Fatal("read config: %w", err)
+		slogx.Fatal("read config: " + err.Error())
 	}
 
 	if err := server.Run(conf, migrate); err != nil {

@@ -8,11 +8,11 @@ import (
 
 func GetLogLevel(logging.GetLogLevelParams) logging.GetLogLevelResponder {
 	return logging.NewGetLogLevelOK().WithPayload(&model.LogLevel{
-		Level: slogx.Level.Level().String(),
+		Level: slogx.LevelVar.String(),
 	})
 }
 
 func UpdateLogLevel(p logging.UpdateLogLevelParams, _ any) logging.UpdateLogLevelResponder {
-	slogx.Level.Set(slogx.ParseLevel(p.Body.Level))
+	slogx.LevelVar.Set(slogx.ParseLevel(p.Body.Level))
 	return logging.NewUpdateLogLevelNoContent()
 }

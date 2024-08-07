@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"os/signal"
+	"syscall"
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/loads"
@@ -18,6 +20,7 @@ import (
 	"github.com/ysomad/go-project-structure/internal/gen/server/restapi/operations/logging"
 	"github.com/ysomad/go-project-structure/internal/gen/server/restapi/operations/product"
 	"github.com/ysomad/go-project-structure/internal/handler/http"
+	"github.com/ysomad/go-project-structure/internal/handler/http/httpserver"
 	v1 "github.com/ysomad/go-project-structure/internal/handler/http/v1"
 	"github.com/ysomad/go-project-structure/internal/service"
 	"github.com/ysomad/go-project-structure/internal/slogx"
@@ -26,7 +29,8 @@ import (
 )
 
 func Run(conf config.Server, migrate bool) error {
-	ctx := context.TODO()
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
 
 	// opentelemetry
 	otelShutdown, err := setupOTelSDK(ctx, conf.Metadata)
@@ -35,13 +39,15 @@ func Run(conf config.Server, migrate bool) error {
 	}
 	defer func() {
 		if err := otelShutdown(context.Background()); err != nil {
-			slogx.Fatal("otel shutdown: %w", err)
+			slog.Warn("otel shutdown: " + err.Error())
 		}
 	}()
 
 	// logger
+	slogx.LevelVar.Set(slogx.ParseLevel(conf.Log.Level))
+
 	otelHandler := otelslog.NewHandler("")
-	levelHandler := slogx.NewLevelFilter(otelHandler, conf.Log.Level)
+	levelHandler := slogx.NewLevelFilter(otelHandler)
 	slog.SetDefault(slog.New(levelHandler))
 
 	slog.Debug("starting with config", "config", conf)
@@ -67,7 +73,7 @@ func Run(conf config.Server, migrate bool) error {
 	}
 
 	api := operations.NewServerAPI(swaggerSpec)
-	api.UseRedoc()
+	api.UseSwaggerUI()
 
 	api.APIKeyAuth = func(key string) (any, error) {
 		if key != conf.Log.APIKey {
@@ -94,14 +100,23 @@ func Run(conf config.Server, migrate bool) error {
 	server := restapi.NewServer(api)
 	defer server.Shutdown() //nolint:errcheck // never fails
 
-	server.Port = conf.Port
-
 	// provide opentelemetry tracing middleware to create spans on incoming requests
 	handler := api.Serve(withTracing)
 	server.SetHandler(handler)
 
-	if err := server.Serve(); err != nil {
-		return fmt.Errorf("serve: %w", err)
+	// http
+	srv := httpserver.New(ctx, handler, httpserver.WithPort(conf.Port))
+
+	select {
+	case err := <-srv.Notify():
+		return fmt.Errorf("httpserver: %w", err)
+	case <-ctx.Done():
+		slog.InfoContext(ctx, "interrupt context")
+		stop()
+	}
+
+	if err := srv.Shutdown(); err != nil {
+		return fmt.Errorf("shutdown: %w", err)
 	}
 
 	return nil

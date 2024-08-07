@@ -2,7 +2,6 @@ package v1
 
 import (
 	"context"
-	"log/slog"
 	"sync"
 	"time"
 
@@ -14,6 +13,7 @@ import (
 	"github.com/ysomad/go-project-structure/internal/gen/server/model"
 	"github.com/ysomad/go-project-structure/internal/gen/server/restapi/operations/product"
 	"github.com/ysomad/go-project-structure/internal/service"
+	"github.com/ysomad/go-project-structure/internal/slogx"
 )
 
 type productHandlers struct {
@@ -44,7 +44,8 @@ func NewProductHandlers(t trace.Tracer, m metric.Meter, s *service.Product) *pro
 func (h *productHandlers) List(p product.ListProductsV1Params) product.ListProductsV1Responder {
 	ctx := p.HTTPRequest.Context()
 
-	slog.ErrorContext(ctx, "list products", "gender", p.Gender)
+	slogx.Fatal("list products", "gender", p.Gender)
+	slogx.TraceContext(ctx, "list products", "gender", p.Gender)
 
 	apiCounter.Add(ctx, 1)
 

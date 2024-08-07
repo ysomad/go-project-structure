@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/ysomad/go-project-structure/internal/config"
+	"github.com/ysomad/go-project-structure/internal/slogx"
 
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel"
@@ -36,7 +37,8 @@ func setupOTelSDK(ctx context.Context, meta config.Metadata) (func(context.Conte
 	// Each registered cleanup will be invoked once.
 	shutdown := func(ctx context.Context) error {
 		var err error
-		for _, fn := range shutdownFuncs {
+		for i, fn := range shutdownFuncs {
+			slogx.TraceContext(ctx, "otel cleanup", "i", i)
 			err = errors.Join(err, fn(ctx))
 		}
 		shutdownFuncs = nil

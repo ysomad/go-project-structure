@@ -12,7 +12,7 @@ run-server:
 .PHONY: run-server-migrate
 run-server-migrate:
 	go mod tidy && go mod download && \
-	pplog go run ./cmd/server/main.go -migrate
+	go run ./cmd/server/main.go -migrate
 
 
 .PHONY: gen-server

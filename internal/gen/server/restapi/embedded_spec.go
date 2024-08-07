@@ -343,10 +343,12 @@ func init() {
         "level": {
           "type": "string",
           "enum": [
+            "TRACE",
             "DEBUG",
             "INFO",
             "WARN",
-            "ERROR"
+            "ERROR",
+            "FATAL"
           ]
         }
       }
@@ -928,10 +930,12 @@ func init() {
         "level": {
           "type": "string",
           "enum": [
+            "TRACE",
             "DEBUG",
             "INFO",
             "WARN",
-            "ERROR"
+            "ERROR",
+            "FATAL"
           ]
         }
       }
