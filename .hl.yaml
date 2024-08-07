@@ -14,17 +14,7 @@ fields:
   predefined:
     time:
       show: auto
-      names:
-        - ts
-        - TS
-        - time
-        - TIME
-        - Time
-        - Timestamp
-        - _SOURCE_REALTIME_TIMESTAMP
-        - __REALTIME_TIMESTAMP
-    logger:
-      names: [logger, LOGGER, Logger]
+      names: [Timestamp]
     level:
       show: auto
       variants:
@@ -36,12 +26,6 @@ fields:
             error: [17, 18, 19, 20, 21, 22, 23, 24]
     message:
       names: [Body.Value]
-    caller:
-      names: [caller, CALLER, Caller]
-    caller-file:
-      names: []
-    caller-line:
-      names: []
   # List of wildcard field names to ignore.
   ignore: [_*]
   # List of exact field names to hide.
@@ -51,7 +35,6 @@ fields:
     - Scope
     - DroppedAttributes
     - SeverityText
-    - Attributes
     - Resource
     - TraceFlags
 # Formatting settings.
