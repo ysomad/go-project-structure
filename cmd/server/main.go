@@ -20,7 +20,7 @@ func main() {
 	flag.StringVar(&confpath, "config", "./configs/server/local.toml", "config path")
 	flag.StringVar(&conf.Metadata.Version, "version", "local-0", "service version")
 	flag.StringVar(&conf.Metadata.InstanceID, "instance", "0", "service instance id")
-	flag.Int64Var(&conf.Metadata.BuildTime, "buildtime", time.Now().Unix(), "build timestamp")
+	flag.Int64Var(&conf.Metadata.BuildTimestamp, "buildtime", time.Now().Unix(), "build timestamp UTC")
 	flag.BoolVar(&migrate, "migrate", false, "run up migrations")
 	flag.Parse()
 

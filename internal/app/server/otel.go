@@ -12,6 +12,7 @@ import (
 
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
 	"go.opentelemetry.io/otel/exporters/stdout/stdoutlog"
@@ -53,7 +54,7 @@ func setupOTelSDK(ctx context.Context, meta config.Metadata) (func(context.Conte
 	prop := newPropagator()
 	otel.SetTextMapPropagator(prop)
 
-	res := newResource(meta.ServiceName, meta.Version, meta.InstanceID)
+	res := newResource(meta.ServiceName, meta.Version, meta.InstanceID, meta.BuildTimestamp)
 
 	// tracing
 	traceProvider, err := newTracerProvider(ctx, res)
@@ -100,12 +101,13 @@ func newPropagator() propagation.TextMapPropagator { //nolint:ireturn // opentel
 }
 
 // https://opentelemetry.io/docs/languages/go/resources/
-func newResource(serviceName, version, instanceID string) *resource.Resource {
+func newResource(serviceName, version, instanceID string, buildTime int64) *resource.Resource {
 	return resource.NewWithAttributes(
 		semconv.SchemaURL,
 		semconv.ServiceNameKey.String(serviceName),
 		semconv.ServiceVersionKey.String(version),
 		semconv.ServiceInstanceIDKey.String(instanceID),
+		attribute.Int64("service.build_time", buildTime),
 	)
 }
 

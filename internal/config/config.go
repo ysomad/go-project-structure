@@ -13,10 +13,10 @@ type Log struct {
 }
 
 type Metadata struct {
-	ServiceName string `toml:"service_name" env-required:"true"`
-	InstanceID  string
-	Version     string
-	BuildTime   int64
+	ServiceName    string `toml:"service_name" env-required:"true"`
+	InstanceID     string
+	Version        string
+	BuildTimestamp int64
 }
 
 type Postgres struct {

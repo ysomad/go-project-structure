@@ -35,7 +35,6 @@ fields:
     - Scope
     - DroppedAttributes
     - SeverityText
-    - Resource
     - TraceFlags
 # Formatting settings.
 formatting:

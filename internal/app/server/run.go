@@ -105,7 +105,7 @@ func Run(conf config.Server, migrate bool) error {
 
 	select {
 	case err := <-srv.Notify():
-		slog.ErrorContext(ctx, "httpserver: "+err.Error())
+		slogx.FatalContext(ctx, "httpserver: "+err.Error())
 	case <-ctx.Done():
 		slog.InfoContext(ctx, ctx.Err().Error())
 	}
