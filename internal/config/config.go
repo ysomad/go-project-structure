@@ -2,6 +2,7 @@ package config
 
 type Server struct {
 	Port     int      `toml:"port" env-required:"true"`
+	Debug    bool     `toml:"debug"`
 	Log      Log      `toml:"logging"`
 	Metadata Metadata `toml:"metadata"`
 	Postgres Postgres `toml:"postgres"`

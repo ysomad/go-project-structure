@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"net/http"
 	"os/signal"
 	"syscall"
 
@@ -19,7 +20,7 @@ import (
 	"github.com/ysomad/go-project-structure/internal/gen/server/restapi/operations/health"
 	"github.com/ysomad/go-project-structure/internal/gen/server/restapi/operations/logging"
 	"github.com/ysomad/go-project-structure/internal/gen/server/restapi/operations/product"
-	"github.com/ysomad/go-project-structure/internal/handler/http"
+	serverhttp "github.com/ysomad/go-project-structure/internal/handler/http"
 	"github.com/ysomad/go-project-structure/internal/handler/http/httpserver"
 	v1 "github.com/ysomad/go-project-structure/internal/handler/http/v1"
 	"github.com/ysomad/go-project-structure/internal/service"
@@ -87,9 +88,9 @@ func Run(conf config.Server, migrate bool) error {
 	productSvc := service.NewProduct(productDB)
 
 	// handler implementations
-	api.HealthPingHandler = health.PingHandlerFunc(http.Ping)
-	api.LoggingGetLogLevelHandler = logging.GetLogLevelHandlerFunc(http.GetLogLevel)
-	api.LoggingUpdateLogLevelHandler = logging.UpdateLogLevelHandlerFunc(http.UpdateLogLevel)
+	api.HealthPingHandler = health.PingHandlerFunc(serverhttp.Ping)
+	api.LoggingGetLogLevelHandler = logging.GetLogLevelHandlerFunc(serverhttp.GetLogLevel)
+	api.LoggingUpdateLogLevelHandler = logging.UpdateLogLevelHandlerFunc(serverhttp.UpdateLogLevel)
 
 	tracer := otel.GetTracerProvider().Tracer("")
 	meter := otel.GetMeterProvider().Meter("")
@@ -98,10 +99,17 @@ func Run(conf config.Server, migrate bool) error {
 	api.ProductListProductsV1Handler = product.ListProductsV1HandlerFunc(productHandlers.List)
 
 	// provide opentelemetry tracing middleware to create spans on incoming requests
-	handler := api.Serve(withTracing)
+	swaggerHandler := api.Serve(withTracing)
+
+	mux := http.NewServeMux()
+	mux.Handle("/", swaggerHandler)
+
+	if conf.Debug {
+		attachPprof(mux)
+	}
 
 	// http
-	srv := httpserver.New(ctx, handler, httpserver.WithPort(conf.Port))
+	srv := httpserver.New(ctx, mux, httpserver.WithPort(conf.Port))
 
 	select {
 	case err := <-srv.Notify():
