@@ -93,6 +93,14 @@ func withTracing(next http.Handler) http.Handler {
 	})
 }
 
+func AddTracingMiddleware(handler http.Handler) http.Handler {
+	handlerWrapper := otelhttp.NewHandler(handler, "")
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		matchedRoute := middleware.MatchedRouteFrom(r)
+		otelhttp.WithRouteTag(matchedRoute.PathPattern, handlerWrapper).ServeHTTP(w, r)
+	})
+}
+
 func newPropagator() propagation.TextMapPropagator { //nolint:ireturn // opentelemetry spec
 	return propagation.NewCompositeTextMapPropagator(
 		propagation.TraceContext{},

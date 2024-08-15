@@ -2,14 +2,17 @@ package server
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"log/slog"
 	"net/http"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/loads"
+	"github.com/ilyakaznacheev/cleanenv"
 	"go.opentelemetry.io/contrib/bridges/otelslog"
 	"go.opentelemetry.io/otel"
 
@@ -29,9 +32,32 @@ import (
 	"github.com/ysomad/go-project-structure/internal/storage/postgres/pgclient"
 )
 
-func Run(conf config.Server, migrate bool) error {
-	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
+func Run(ctx context.Context, args []string) error {
+	ctx, cancel := signal.NotifyContext(ctx, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 	defer cancel()
+
+	// parse args
+	var (
+		confpath string
+		conf     config.Server
+		migrate  bool
+	)
+
+	flags := flag.NewFlagSet("", flag.ExitOnError)
+	flags.StringVar(&confpath, "config", "./configs/server/local.toml", "config path")
+	flags.StringVar(&conf.Metadata.Version, "version", "local-0", "service version")
+	flags.StringVar(&conf.Metadata.InstanceID, "instance", "0", "service instance id")
+	flags.Int64Var(&conf.Metadata.BuildTimestamp, "buildtime", time.Now().Unix(), "build timestamp UTC")
+	flags.BoolVar(&migrate, "migrate", false, "run up migrations")
+
+	if err := flags.Parse(args); err != nil {
+		return fmt.Errorf("flags parse: %w", err)
+	}
+
+	// parse config
+	if err := cleanenv.ReadConfig(confpath, &conf); err != nil {
+		return fmt.Errorf("read config: %w", err)
+	}
 
 	// opentelemetry
 	otelShutdown, err := setupOTelSDK(ctx, conf.Metadata)
@@ -39,7 +65,7 @@ func Run(conf config.Server, migrate bool) error {
 		return err
 	}
 	defer func() {
-		if err := otelShutdown(context.Background()); err != nil {
+		if err := otelShutdown(ctx); err != nil {
 			slog.Warn("otel shutdown: " + err.Error())
 		}
 	}()
